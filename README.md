@@ -1,41 +1,89 @@
-# JAR Preact
-A custom router with syntax similiar to `preact-iso` that abstracts routing from `window.location` and gives developers more control over persistence.
+# JAR
 
-# Usage
-JAR uses `zustand` under the hood giving developers freedom over how they want to store the state. If you want to persist te state you have to provide the `createRouterStore` function with your preffered storage. 
+JAR is a JSX Abstract Router for React and Preact. It keeps route state in a
+Zustand store instead of binding routing to `window.location`, which makes it a
+good fit for popups, extensions, embedded panels, and other non-document router
+surfaces.
 
-Below is an example of usage in chrome extension development with [`zustand-chrome-storage`](https://www.npmjs.com/package/zustand-chrome-storage).
+This package ships both framework adapters from one codebase:
 
-```ts
-//app.tsx
-import { ChromeSessionStorage } from "zustand-chrome-storage";
-import { Router, createRouterStore, createLink, Route } from "jar-preact";
+- React: `jar` or `jar/react`
+- Preact: `jar/preact`
 
-// Assign unique id to make each tab have it's own router
-export const useRouter = createRouterStore(ChromeSessionStorage, uuidv4());
+## Install
+
+React apps need React and Zustand:
+
+```sh
+npm install jar react zustand
+```
+
+Preact apps need Preact and Zustand:
+
+```sh
+npm install jar preact zustand
+```
+
+React and Preact are optional peers so one framework does not force-install the
+other. Zustand is the shared required peer.
+
+## React Usage
+
+```tsx
+import { Route, Router, createLink, createRouterStore } from "jar";
+import { getChromeSessionStorage } from "zustand-chrome-storage";
+
+export const useRouter = createRouterStore(getChromeSessionStorage(), "tab-1");
 export const Link = createLink(useRouter);
 
 export default function App() {
-
-return(
-  <Router routerStore={useRouter}>
-    <Route path="/" component={<MyRootPage />} />
-    <Route path="/signup" component={<MySignupPage />} />
-  </Router>
- );
+  return (
+    <Router routerStore={useRouter}>
+      <Route path="/" component={<MyRootPage />} />
+      <Route path="/settings" component={<MySettingsPage />} />
+    </Router>
+  );
 }
 ```
 
-As you can see we use `createRouterStore` to create reusable `useRouter` function and `createLink` to create a reusable `Link` component. We can import those in other components to navigate between them, display current location and history or to go back.
+## Preact Usage
 
-```ts
-import { useRouter } from "../app";
+```tsx
+import { Route, Router, createLink, createRouterStore } from "jar/preact";
+import { getChromeSessionStorage } from "zustand-chrome-storage";
 
-export function MyRootPage() {
-  const {history, location, navigate, goBack} = useRouter()
+export const useRouter = createRouterStore(getChromeSessionStorage(), "tab-1");
+export const Link = createLink(useRouter);
 
+export default function App() {
   return (
-    ...
+    <Router routerStore={useRouter}>
+      <Route path="/" component={<MyRootPage />} />
+      <Route path="/settings" component={<MySettingsPage />} />
+    </Router>
   );
 }
+```
+
+## Router State
+
+```ts
+const { history, location, canGoBack, navigate, goBack, clearHistory } =
+  useRouter();
+```
+
+`createRouterStore` accepts either the legacy positional signature:
+
+```ts
+createRouterStore(storage, "tab-1");
+```
+
+or an options object:
+
+```ts
+createRouterStore({
+  storage,
+  key: "tab-1",
+  initialLocation: "/popup",
+});
 ```
