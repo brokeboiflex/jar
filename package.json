@@ -18,6 +18,10 @@
     "preact",
     "jar"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brokeboiflex/jar.git"
+  },
   "author": "brokeboiflex",
   "license": "ISC",
   "sideEffects": false,
